@@ -1,5 +1,6 @@
-
-import { useCallback, useEffect, useState } from 'react';
+import { addTask, deleteTask, getTasks, updateTask } from '@/storage';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -9,22 +10,7 @@ import {
   View,
 } from 'react-native';
 
-// ---------- ТЕСТОВОЕ ХРАНИЛИЩЕ (имитация storage.js) ----------
-let mockTasks = [
-  { id: '1728470000000', title: 'Сделать домашку', date: '2026-10-10', time: '18:00', durationMin: 60, priority: 'high', done: false, spentMin: 0 },
-  { id: '1728470000001', title: 'Купить продукты', date: '2026-10-11', time: '12:30', durationMin: 30, priority: 'low', done: true, spentMin: 25 },
-];
-const getTasks = async () => [...mockTasks];
-const addTask = async (task) => {
-  mockTasks = [...mockTasks, task];
-};
-const updateTask = async (id, changes) => {
-  mockTasks = mockTasks.map((t) => (t.id === id ? { ...t, ...changes } : t));
-};
-const deleteTask = async (id) => {
-  mockTasks = mockTasks.filter((t) => t.id !== id);
-};
-// ---------------------------------------------------------------
+
 
 const FILTERS = [
   { key: 'all', label: 'Все' },
@@ -57,15 +43,18 @@ export default function App() {
   const [priority, setPriority] = useState('medium');
   const [error, setError] = useState('');
 
-  const loadTasks = useCallback(async () => {
-    const data = await getTasks();
+    const loadTasks = useCallback(async () => {
+    const data = [...(await getTasks())];
     data.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     setTasks(data);
   }, []);
 
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  // перечитываем задачи каждый раз, когда вкладка открывается
+  useFocusEffect(
+    useCallback(() => {
+      loadTasks();
+    }, [loadTasks])
+  );
 
   const handleAdd = async () => {
     const trimmed = title.trim();
