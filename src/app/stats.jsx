@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -323,6 +324,10 @@ function Current_task_card(props) {
 
 
 function Overdue_list(props) {
+    var is_open_state = useState(false);
+    var is_open = is_open_state[0];
+    var set_is_open = is_open_state[1];
+
     if (props.tasks.length === 0) {
         return (
             <ThemedView style={styles.currentContainer}>
@@ -332,19 +337,36 @@ function Overdue_list(props) {
         );
     }
 
+    function handle_toggle() {
+        set_is_open(!is_open);
+    }
+
     return (
         <ThemedView style={styles.currentContainer}>
-            <ThemedText type="subtitle">Просрочено: {props.tasks.length}</ThemedText>
-            {props.tasks.map(function(task, index) {
-                return (
-                    <ThemedText key={index} style={styles.overdueItem}>
-                        • {task.title} ({task.date})
-                    </ThemedText>
-                );
-            })}
+            <TouchableOpacity 
+                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }} 
+                onPress={handle_toggle}
+            >
+                <ThemedText type="subtitle">Просрочено: {props.tasks.length}</ThemedText>
+                <ThemedText style={{ color: '#888', fontSize: 16 }}>
+                    {is_open ? '▲' : '▼'}
+                </ThemedText>
+            </TouchableOpacity>
+
+            {is_open === true && (
+                <View style={{ marginTop: 8 }}>
+                    {props.tasks.map(function(task, index) {
+                        return (
+                            <ThemedText key={index} style={styles.overdueItem}>
+                                • {task.title} ({task.date})
+                            </ThemedText>
+                        );
+                    })}
+                </View>
+            )}
         </ThemedView>
     );
-}
+} 
 
 
 function Chart_bar(props) {
@@ -430,8 +452,12 @@ export default function Screen_stats() {
     var period_state = useState('day');
     var period = period_state[0];
     var set_period = period_state[1];
-
-    useEffect(load_tasks, []);
+    
+    useFocusEffect(
+        useCallback(() => {
+            load_tasks();
+        }, [tasks]) 
+    );
 
     function load_tasks() {
         getTasks().then(handle_tasks_loaded);
