@@ -530,6 +530,12 @@ export default function Screen_stats() {
 
                     <ThemedText type="subtitle">Статистика</ThemedText>
 
+                    <View style={{ padding: 10, backgroundColor: '#e1f5fe', borderRadius: 8, marginTop: 8, width: '100%' }}>
+                        <ThemedText style={{ color: '#0288d1', fontWeight: 'bold', fontSize: 13 }}>
+                            Текущий статус: {get_status_text(percent)}
+                        </ThemedText>
+                    </View>
+
                     <View style={styles.periodRow}>
                         <Button_period label="День"   active={period === 'day'}   onPress={handle_day_press}   />
                         <Button_period label="Неделя" active={period === 'week'}  onPress={handle_week_press}  />
@@ -726,4 +732,16 @@ function Priority_widget(props) {
                 </View>
             </View>
     );
+}
+
+function get_status_text(percent) {
+    if (percent === 0) {
+        return "☕ Отдыхаем / Ещё не начали";
+    } else if (percent < 50) {
+        return "📈 Медленно, но верно движемся!";
+    } else if (percent < 100) {
+        return "⚡ Продуктивность на высоте!";
+    } else {
+        return "🏆 Идеальный день!";
+    }
 }
