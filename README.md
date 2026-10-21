@@ -32,11 +32,13 @@
 
 | Часть | Файлы | Кто |
 |-------|-------|-----|
-| Тимлид: репозиторий и правила, вкладки, общее хранилище, сборка APK, ревью | `src/components/app-tabs.tsx`, `src/storage.js`, `eas.json` | Андрей |
-| Задачи | `src/app/index.jsx` | Лиза |
-| Расписание | `src/app/schedule.jsx`, `src/components/schedule/` | Влад |
-| Статистика | `src/app/stats.jsx` | Кирилл |
-| Заметки | `src/app/notes.jsx`, `src/components/note-editor.jsx` | Андрей |
+| Тимлид: репозиторий и правила, вкладки, общее хранилище, сборка APK, ревью | `src/components/app-tabs.tsx`, `src/storage.js`, `eas.json` | Андрей Рязанов |
+| Задачи | `src/app/index.jsx` | Елизавета Щанькина |
+| Расписание | `src/app/schedule.jsx`, `src/components/schedule/` | Владислав Цыранов |
+| Статистика | `src/app/stats.jsx` | Кирилл Исаев |
+| Заметки | `src/app/notes.jsx` | Полина Роженцова |
+| Дизайн: цвета и тема | `src/constants/theme.ts` | Никита Мухин |
+| Участник команды | | Иван Молодов |
 
 ## Как мы работали с Git
 
