@@ -1,6 +1,10 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Общие цвета, шрифты и отступы приложения (роль 7 — дизайн).
+ * Светлая / тёмная тема по макету: тёплый off-white, акцент синий.
+ *
+ * Остальные экраны берут значения через useTheme() / Colors.
+ * Новые ключи (border, accent, accentText, danger, Radius) — опциональны:
+ * старый код без них продолжит работать.
  */
 
 import '@/global.css';
@@ -9,22 +13,37 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#1A1A1A',
+    background: '#FAFAF7',
+    backgroundElement: '#F0EFEA',
+    backgroundSelected: '#E4E2DB',
+    textSecondary: '#6B6B66',
+    border: '#E7E5DE',
+    accent: '#3D5AFE',
+    accentText: '#FFFFFF',
+    danger: '#C93C37',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F2F2EE',
+    background: '#0E0E0C',
+    backgroundElement: '#1B1B19',
+    backgroundSelected: '#272724',
+    textSecondary: '#A3A39C',
+    border: '#2A2A27',
+    accent: '#7C93FF',
+    accentText: '#0E0E0C',
+    danger: '#FF7A74',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+export const Radius = {
+  sm: 8,
+  md: 12,
+  lg: 20,
+  pill: 999,
+} as const;
 
 export const Fonts = Platform.select({
   ios: {
