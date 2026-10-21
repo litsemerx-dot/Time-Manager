@@ -19,13 +19,13 @@
 
 | # | Часть | Файлы | Кто |
 |---|-------|-------|-----|
-| 1 | Навигация, хранение данных, тема, EAS | src/app/_layout.tsx, src/components/app-tabs.tsx, src/storage.ts, eas.json, app.json | Андрей (тимлид) |
-| 2 | Список задач | src/app/index.tsx, src/components/task-item.tsx | |
-| 3 | Форма задачи: приоритет, дедлайн, категория | src/components/task-form.tsx | |
-| 4 | Таймер Pomodoro | src/app/timer.tsx | |
-| 5 | План на день | src/app/calendar.tsx | |
-| 6 | Статистика | src/app/stats.tsx | |
-| 7 | Настройки и напоминания | src/app/settings.tsx | |
+| 1 | Навигация, хранение данных, тема, EAS | src/app/_layout.tsx, src/components/app-tabs.tsx, src/storage.ts, eas.json, app.json | Андрей Рязанов (тимлид) |
+| 2 | Список задач | src/app/index.tsx, src/components/task-item.tsx |Владислав Цыранов |
+| 3 | Форма задачи: приоритет, дедлайн, категория | src/components/task-form.tsx | Елизавета Щанькина  |
+| 4 | Таймер Pomodoro | src/app/timer.tsx | Иван Молодов  |
+| 5 | План на день | src/app/calendar.tsx | Роженцова Полина |
+| 6 | Статистика | src/app/stats.tsx | Кирилл Исаев |
+| 7 | Дизайн и архитектура | src/app/settings.tsx | Никита Мухин |
 
 Правишь только свои файлы. Нужно изменить чужой файл: сначала напиши его владельцу.
 
