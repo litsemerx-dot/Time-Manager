@@ -1,4 +1,4 @@
-import { addTask, deleteTask, getTasks, updateTask } from '@/storage';
+import { addTask, deleteTask, getTasks, setTaskDone } from '@/storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -23,6 +23,8 @@ const PRIORITY = {
   medium: { label: 'Средний', color: '#F5A524' },
   low: { label: 'Низкий', color: '#30A46C' },
 };
+
+const DURATIONS = [15, 30, 45, 60, 90, 120];
 
 const todayString = () => {
   const d = new Date();
@@ -88,7 +90,8 @@ export default function App() {
   };
 
   const toggleDone = async (task) => {
-    await updateTask(task.id, { done: !task.done });
+    // Через setTaskDone: при выполнении время задачи само попадает в трекер
+    await setTaskDone(task.id, !task.done);
     loadTasks();
   };
 
@@ -121,6 +124,7 @@ export default function App() {
           <Text style={[styles.title, item.done && styles.titleDone]}>{item.title}</Text>
           <Text style={styles.secondary}>
             {item.date} · {item.time} · {item.durationMin} мин
+            {item.spentMin > 0 ? ' · записано ' + item.spentMin + ' мин' : ''}
           </Text>
           <Text style={{ color: p.color }}>{p.label}</Text>
         </View>
@@ -192,6 +196,19 @@ export default function App() {
           </View>
         </View>
 
+        {/* Быстрый выбор длительности. Это время попадёт в трекер, когда задачу отметят выполненной */}
+        <View style={styles.rowWrap}>
+          {DURATIONS.map((m) => (
+            <Pressable
+              key={m}
+              onPress={() => setDuration(String(m))}
+              style={[styles.chipSmall, duration === String(m) && styles.chipActive]}
+            >
+              <Text style={duration === String(m) && styles.chipTextActive}>{m} мин</Text>
+            </Pressable>
+          ))}
+        </View>
+
         <View style={styles.row}>
           {Object.entries(PRIORITY).map(([key, p]) => (
             <Pressable
@@ -260,6 +277,14 @@ const styles = StyleSheet.create({
   header: { fontSize: 28, fontWeight: '700', marginBottom: 12, color: '#000' },
   form: { gap: 10 },
   row: { flexDirection: 'row', gap: 8 },
+  rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chipSmall: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
   field: { flex: 2, gap: 4 },
   fieldSmall: { flex: 1, gap: 4 },
   label: { color: '#666', fontSize: 12 },

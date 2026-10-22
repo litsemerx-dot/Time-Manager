@@ -25,6 +25,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="timer">
+        <NativeTabs.Trigger.Label>Таймер</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="timer" md="timer" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="stats">
         <NativeTabs.Trigger.Label>Статистика</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="chart.bar" md="bar_chart" />
