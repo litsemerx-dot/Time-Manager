@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useTheme } from '@/hooks/use-theme';
 import { getTasks } from '@/storage';
 
 
@@ -59,7 +61,6 @@ function generate_mock_tasks() {
     return tasks;
 }
 
-const MOCK_TASKS = generate_mock_tasks();
 
 
 function get_today_date() {
@@ -261,7 +262,11 @@ function Button_period(props) {
         btn_style.push(styles.periodBtnActive);
     }
 
-    var text_color = props.active ? '#fff' : '#000';
+    var theme = useTheme();
+    if (!props.active) {
+        btn_style.push({ backgroundColor: theme.backgroundElement });
+    }
+    var text_color = props.active ? '#fff' : theme.text;
 
     return (
         <TouchableOpacity style={btn_style} onPress={props.onPress}>
@@ -272,9 +277,9 @@ function Button_period(props) {
 
 function Card_stat(props) {
     return (
-        <ThemedView style={styles.card}>
-            <ThemedText type="title">{props.value}</ThemedText>
-            <ThemedText type="textSecondary">{props.label}</ThemedText>
+        <ThemedView type="backgroundElement" style={styles.card}>
+            <ThemedText style={styles.bigNumber}>{props.value}</ThemedText>
+            <ThemedText themeColor="textSecondary">{props.label}</ThemedText>
         </ThemedView>
     );
 }
@@ -282,7 +287,7 @@ function Card_stat(props) {
 
 function Progress_bar(props) {
     return (
-        <ThemedView style={styles.progressContainer}>
+        <ThemedView type="backgroundElement" style={styles.progressContainer}>
             <ThemedText>Прогресс: {props.value}%</ThemedText>
             <View style={styles.progressBg}>
                 <View style={[styles.progressFill, { width: props.value + '%' }]} />
@@ -294,11 +299,11 @@ function Progress_bar(props) {
 
 function Streak_card(props) {
     return (
-        <ThemedView style={styles.streakContainer}>
+        <View style={styles.streakContainer}>
             <ThemedText style={styles.streakFire}>🔥</ThemedText>
-            <ThemedText type="title">{props.value}</ThemedText>
-            <ThemedText type="textSecondary">дней подряд</ThemedText>
-        </ThemedView>
+            <ThemedText style={styles.bigNumber}>{props.value}</ThemedText>
+            <ThemedText themeColor="textSecondary">дней подряд</ThemedText>
+        </View>
     );
 }
 
@@ -306,17 +311,17 @@ function Streak_card(props) {
 function Current_task_card(props) {
     if (props.task === null) {
         return (
-            <ThemedView style={styles.currentContainer}>
-                <ThemedText type="subtitle">Текущая задача</ThemedText>
-                <ThemedText type="textSecondary">Всё выполнено! Молодец 🎉</ThemedText>
+            <ThemedView type="backgroundElement" style={styles.currentContainer}>
+                <ThemedText style={styles.sectionTitle}>Текущая задача</ThemedText>
+                <ThemedText themeColor="textSecondary">Всё выполнено! Молодец 🎉</ThemedText>
             </ThemedView>
         );
     }
     return (
-        <ThemedView style={styles.currentContainer}>
-            <ThemedText type="subtitle">Текущая задача</ThemedText>
+        <ThemedView type="backgroundElement" style={styles.currentContainer}>
+            <ThemedText style={styles.sectionTitle}>Текущая задача</ThemedText>
             <ThemedText>{props.task.title}</ThemedText>
-            <ThemedText type="textSecondary">в {props.task.time}</ThemedText>
+            <ThemedText themeColor="textSecondary">в {props.task.time}</ThemedText>
         </ThemedView>
     );
 }
@@ -325,16 +330,16 @@ function Current_task_card(props) {
 function Overdue_list(props) {
     if (props.tasks.length === 0) {
         return (
-            <ThemedView style={styles.currentContainer}>
-                <ThemedText type="subtitle">Просрочено</ThemedText>
-                <ThemedText type="textSecondary">Просроченных задач нет</ThemedText>
+            <ThemedView type="backgroundElement" style={styles.currentContainer}>
+                <ThemedText style={styles.sectionTitle}>Просрочено</ThemedText>
+                <ThemedText themeColor="textSecondary">Просроченных задач нет</ThemedText>
             </ThemedView>
         );
     }
 
     return (
-        <ThemedView style={styles.currentContainer}>
-            <ThemedText type="subtitle">Просрочено: {props.tasks.length}</ThemedText>
+        <ThemedView type="backgroundElement" style={styles.currentContainer}>
+            <ThemedText style={styles.sectionTitle}>Просрочено: {props.tasks.length}</ThemedText>
             {props.tasks.map(function(task, index) {
                 return (
                     <ThemedText key={index} style={styles.overdueItem}>
@@ -412,8 +417,8 @@ function Chart_bar(props) {
     }
 
     return (
-        <ThemedView style={styles.chartContainer}>
-            <ThemedText type="subtitle">Продуктивность</ThemedText>
+        <ThemedView type="backgroundElement" style={styles.chartContainer}>
+            <ThemedText style={styles.sectionTitle}>Продуктивность</ThemedText>
             <View style={styles.chartRow}>{bars}</View>
         </ThemedView>
     );
@@ -431,18 +436,15 @@ export default function Screen_stats() {
     var period = period_state[0];
     var set_period = period_state[1];
 
-    useEffect(load_tasks, []);
+    // Перечитываем задачи каждый раз, когда открываем вкладку
+    useFocusEffect(useCallback(load_tasks, []));
 
     function load_tasks() {
         getTasks().then(handle_tasks_loaded);
     }
 
     function handle_tasks_loaded(data) {
-        if (data.length === 0) {
-            set_tasks(MOCK_TASKS);
-        } else {
-            set_tasks(data);
-        }
+        set_tasks(data);
     }
 
     function handle_day_press()   { set_period('day');   }
@@ -502,7 +504,7 @@ export default function Screen_stats() {
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                    <ThemedText type="subtitle">Статистика</ThemedText>
+                    <ThemedText style={styles.screenTitle}>Статистика</ThemedText>
 
                     <View style={styles.periodRow}>
                         <Button_period label="День"   active={period === 'day'}   onPress={handle_day_press}   />
@@ -511,9 +513,9 @@ export default function Screen_stats() {
                     </View>
 
                     {count_all === 0 ? (
-                        <ThemedView style={styles.emptyContainer}>
-                            <ThemedText type="subtitle">📭 Пока нет задач</ThemedText>
-                            <ThemedText type="textSecondary">За этот период ничего не запланировано</ThemedText>
+                        <ThemedView type="backgroundElement" style={styles.emptyContainer}>
+                            <ThemedText style={styles.sectionTitle}>📭 Пока нет задач</ThemedText>
+                            <ThemedText themeColor="textSecondary">За этот период ничего не запланировано</ThemedText>
                         </ThemedView>
                     ) : (
                         <View>
@@ -564,27 +566,29 @@ const styles = StyleSheet.create({
     scrollContent: { padding: 16, gap: 16 },
 
     gap: { height: 16 },
+    screenTitle: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
+    sectionTitle: { fontSize: 18, lineHeight: 24, fontWeight: '700' },
     periodRow: { flexDirection: 'row', gap: 8 },
     periodBtn: {
         paddingHorizontal: 16, paddingVertical: 8,
-        borderRadius: 8, backgroundColor: '#eee',
+        borderRadius: 8,
     },
     periodBtnActive: { backgroundColor: '#4a90e2' },
 
     cards: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
     card: {
         width: '47%', padding: 16, borderRadius: 12,
-        backgroundColor: '#f5f5f5', alignItems: 'center',
+        alignItems: 'center',
     },
 
 
     progressContainer: {
         padding: 16, borderRadius: 12,
-        backgroundColor: '#f5f5f5', gap: 8,
+        gap: 8,
     },
     progressBg: {
         width: '100%', height: 16,
-        backgroundColor: '#ddd', borderRadius: 8,
+        backgroundColor: 'rgba(128, 128, 128, 0.25)', borderRadius: 8,
     },
     progressFill: {
         height: '100%',
@@ -594,24 +598,25 @@ const styles = StyleSheet.create({
 
     streakContainer: {
         padding: 16, borderRadius: 12,
-        backgroundColor: '#fff3e0', alignItems: 'center', gap: 4,
+        backgroundColor: 'rgba(255, 152, 0, 0.15)', alignItems: 'center', gap: 4,
     },
-    streakFire: { fontSize: 32 },
+    streakFire: { fontSize: 32, lineHeight: 40 },
+    bigNumber: { fontSize: 32, lineHeight: 40, fontWeight: '700' },
 
     currentContainer: {
         padding: 16, borderRadius: 12,
-        backgroundColor: '#f5f5f5', gap: 4,
+        gap: 4,
     },
     overdueItem: { fontSize: 13, color: '#c0392b' },
 
     emptyContainer: {
         padding: 32, borderRadius: 12,
-        backgroundColor: '#f5f5f5', alignItems: 'center', gap: 8,
+        alignItems: 'center', gap: 8,
     },
 
     chartContainer: {
         padding: 16, borderRadius: 12,
-        backgroundColor: '#f5f5f5', gap: 12,
+        gap: 12,
     },
     chartRow: {
         flexDirection: 'row',
@@ -682,22 +687,22 @@ function Priority_widget(props) {
     var temp2 = [];
     temp = props.data;
     return (
-            <View style={{ padding: 16, backgroundColor: '#f5f5f5', borderRadius: 12, gap: 12 }}>
-                <ThemedText type="subtitle">Приоритеты</ThemedText>
+            <ThemedView type="backgroundElement" style={{ padding: 16, borderRadius: 12, gap: 12 }}>
+                <ThemedText style={styles.sectionTitle}>Приоритеты</ThemedText>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'green' }} />
-                <ThemedText>Low priority complete: {temp[0]}</ThemedText>
+                <ThemedText>Низкий приоритет, выполнено: {temp[0]}</ThemedText>
                 </View>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'orange' }} />
-                <ThemedText>Medium priority complete: {temp[1]}</ThemedText>
+                <ThemedText>Средний приоритет, выполнено: {temp[1]}</ThemedText>
                 </View>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'red' }} />
-                <ThemedText>High priority complete: {temp[2]}</ThemedText>        
+                <ThemedText>Высокий приоритет, выполнено: {temp[2]}</ThemedText>
                 </View>
-            </View>
+            </ThemedView>
     );
 }
