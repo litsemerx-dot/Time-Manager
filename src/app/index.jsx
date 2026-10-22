@@ -1,6 +1,6 @@
 import { addTask, deleteTask, getTasks, setTaskDone } from '@/storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -9,6 +9,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import { useTheme } from '@/hooks/use-theme';
 
 
 
@@ -33,6 +35,9 @@ const todayString = () => {
 };
 
 export default function App() {
+  // цвета берём из общей темы, чтобы экран работал и в тёмной теме
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('all');
   const [confirmId, setConfirmId] = useState(null); // задача, для которой показано «Удалить?»
@@ -135,7 +140,7 @@ export default function App() {
               <Text style={styles.confirmYesText}>Удалить</Text>
             </Pressable>
             <Pressable style={styles.confirmNo} onPress={() => setConfirmId(null)}>
-              <Text>Отмена</Text>
+              <Text style={styles.chipText}>Отмена</Text>
             </Pressable>
           </View>
         ) : (
@@ -157,7 +162,7 @@ export default function App() {
           value={title}
           onChangeText={setTitle}
           placeholder="Что нужно сделать?"
-          placeholderTextColor="#999"
+          placeholderTextColor={theme.textSecondary}
           onSubmitEditing={handleAdd}
           returnKeyType="done"
         />
@@ -170,7 +175,7 @@ export default function App() {
               value={date}
               onChangeText={setDate}
               placeholder="2026-10-10"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.textSecondary}
             />
           </View>
           <View style={styles.fieldSmall}>
@@ -180,7 +185,7 @@ export default function App() {
               value={time}
               onChangeText={setTime}
               placeholder="18:00"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.textSecondary}
             />
           </View>
           <View style={styles.fieldSmall}>
@@ -191,7 +196,7 @@ export default function App() {
               onChangeText={(v) => setDuration(v.replace(/\D/g, ''))}
               keyboardType="numeric"
               placeholder="60"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.textSecondary}
             />
           </View>
         </View>
@@ -204,7 +209,7 @@ export default function App() {
               onPress={() => setDuration(String(m))}
               style={[styles.chipSmall, duration === String(m) && styles.chipActive]}
             >
-              <Text style={duration === String(m) && styles.chipTextActive}>{m} мин</Text>
+              <Text style={[styles.chipText, duration === String(m) && styles.chipTextActive]}>{m} мин</Text>
             </Pressable>
           ))}
         </View>
@@ -219,7 +224,7 @@ export default function App() {
                 priority === key && { backgroundColor: p.color, borderColor: p.color },
               ]}
             >
-              <Text style={priority === key && styles.chipTextActive}>{p.label}</Text>
+              <Text style={[styles.chipText, priority === key && styles.chipTextActive]}>{p.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -238,7 +243,7 @@ export default function App() {
             onPress={() => setFilter(f.key)}
             style={[styles.chip, filter === f.key && styles.chipActive]}
           >
-            <Text style={filter === f.key && styles.chipTextActive}>{f.label}</Text>
+            <Text style={[styles.chipText, filter === f.key && styles.chipTextActive]}>{f.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -263,102 +268,106 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  // на широком экране браузера ограничиваем ширину, на телефоне ничего не меняется
-  content: {
-    flex: 1,
-    width: '100%',
-    maxWidth: 600,
-    alignSelf: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 32,
-  },
-  header: { fontSize: 28, fontWeight: '700', marginBottom: 12, color: '#000' },
-  form: { gap: 10 },
-  row: { flexDirection: 'row', gap: 8 },
-  rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chipSmall: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  field: { flex: 2, gap: 4 },
-  fieldSmall: { flex: 1, gap: 4 },
-  label: { color: '#666', fontSize: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#000',
-    backgroundColor: '#fff',
-  },
-  error: { color: '#E5484D' },
-  addButton: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  addButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  filters: { flexDirection: 'row', gap: 8, marginVertical: 16 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  chipActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-  chipTextActive: { color: '#fff' },
-  list: { gap: 10, paddingBottom: 40 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-  },
-  cardBody: { flex: 1, gap: 2 },
-  title: { fontSize: 16, color: '#000' },
-  titleDone: { textDecorationLine: 'line-through', opacity: 0.5 },
-  secondary: { color: '#666' },
-  checkbox: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 2,
-    borderColor: '#aaa',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxDone: { backgroundColor: '#30A46C', borderColor: '#30A46C' },
-  checkmark: { color: '#fff', fontSize: 14 },
-  deleteIcon: { fontSize: 20 },
-  confirmBox: { gap: 6 },
-  confirmYes: {
-    backgroundColor: '#E5484D',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-  },
-  confirmYesText: { color: '#fff', fontWeight: '600' },
-  confirmNo: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-  },
-  empty: { textAlign: 'center', marginTop: 32 },
-});
+// c — цвета текущей темы (светлой или тёмной), см. src/constants/theme.ts
+function makeStyles(c) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    // на широком экране браузера ограничиваем ширину, на телефоне ничего не меняется
+    content: {
+      flex: 1,
+      width: '100%',
+      maxWidth: 600,
+      alignSelf: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 32,
+    },
+    header: { fontSize: 28, fontWeight: '700', marginBottom: 12, color: c.text },
+    form: { gap: 10 },
+    row: { flexDirection: 'row', gap: 8 },
+    rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chipSmall: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    field: { flex: 2, gap: 4 },
+    fieldSmall: { flex: 1, gap: 4 },
+    label: { color: c.textSecondary, fontSize: 12 },
+    input: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 16,
+      color: c.text,
+      backgroundColor: c.backgroundElement,
+    },
+    error: { color: '#E5484D' },
+    addButton: {
+      backgroundColor: '#3B82F6',
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    addButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+    filters: { flexDirection: 'row', gap: 8, marginVertical: 16 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    chipActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+    chipTextActive: { color: '#fff' },
+    list: { gap: 10, paddingBottom: 40 },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.backgroundElement,
+    },
+    cardBody: { flex: 1, gap: 2 },
+    title: { fontSize: 16, color: c.text },
+    titleDone: { textDecorationLine: 'line-through', opacity: 0.5 },
+    secondary: { color: c.textSecondary },
+    checkbox: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 2,
+      borderColor: c.textSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxDone: { backgroundColor: '#30A46C', borderColor: '#30A46C' },
+    checkmark: { color: '#fff', fontSize: 14 },
+    deleteIcon: { fontSize: 20 },
+    confirmBox: { gap: 6 },
+    confirmYes: {
+      backgroundColor: '#E5484D',
+      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      alignItems: 'center',
+    },
+    confirmYesText: { color: '#fff', fontWeight: '600' },
+    confirmNo: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      alignItems: 'center',
+    },
+    empty: { textAlign: 'center', marginTop: 32 },
+    chipText: { color: c.text },
+  });
+}

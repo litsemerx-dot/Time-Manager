@@ -1,8 +1,8 @@
-// src/app/notes.js
+// src/app/notes.jsx
 // Экран «Папки и заметки». Три состояния в одном файле:
 //   папки → заметки внутри папки → редактор заметки.
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -16,10 +16,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTheme } from '@/hooks/use-theme';
+
 const STORAGE_KEY = 'notes:v1';
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 export default function NotesScreen() {
+  // цвета берём из общей темы, чтобы экран работал и в тёмной теме
+  const theme = useTheme();
+  const C = useMemo(() => makeColors(theme), [theme]);
+  const s = useMemo(() => makeStyles(C), [C]);
   const [data, setData] = useState({ folders: [], notes: [] });
   const [loaded, setLoaded] = useState(false);
   const [folderId, setFolderId] = useState(null); // открытая папка
@@ -234,54 +240,59 @@ export default function NotesScreen() {
   );
 }
 
-const C = {
-  bg: '#FAFAF7',
-  card: '#FFFFFF',
-  text: '#1D2B2A',
-  muted: '#8A9593',
-  accent: '#1F6F68',
-  line: '#E4E8E6',
-  danger: '#C0392B',
-};
+function makeColors(t) {
+  return {
+    bg: t.background,
+    card: t.backgroundElement,
+    text: t.text,
+    muted: t.textSecondary,
+    accent: t.accent ?? '#1F6F68',
+    accentText: t.accentText ?? '#fff',
+    line: t.border ?? t.backgroundSelected,
+    danger: t.danger ?? '#C0392B',
+  };
+}
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: C.bg, paddingHorizontal: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
-  link: { color: C.accent, fontSize: 16, fontWeight: '600' },
-  danger: { color: C.danger },
-  title: { fontSize: 28, fontWeight: '700', color: C.text, marginTop: 8, marginBottom: 12 },
-  list: { paddingBottom: 24, gap: 10 },
-  row: {
-    backgroundColor: C.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: C.line,
-    padding: 14,
-  },
-  rowTitle: { fontSize: 17, fontWeight: '600', color: C.text },
-  rowSub: { fontSize: 14, color: C.muted, marginTop: 4 },
-  rowDate: { fontSize: 12, color: C.muted, marginTop: 8 },
-  empty: { color: C.muted, fontSize: 15, marginTop: 24, textAlign: 'center' },
-  hint: { color: C.muted, fontSize: 12, textAlign: 'center', paddingVertical: 8 },
-  addRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  addInput: {
-    flex: 1,
-    backgroundColor: C.card,
-    borderWidth: 1,
-    borderColor: C.line,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: C.text,
-  },
-  addBtn: {
-    backgroundColor: C.accent,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  titleInput: { fontSize: 24, fontWeight: '700', color: C.text, paddingVertical: 8 },
-  bodyInput: { flex: 1, fontSize: 17, lineHeight: 24, color: C.text, paddingTop: 8 },
-});
+function makeStyles(C) {
+  return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: C.bg, paddingHorizontal: 16 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
+    link: { color: C.accent, fontSize: 16, fontWeight: '600' },
+    danger: { color: C.danger },
+    title: { fontSize: 28, fontWeight: '700', color: C.text, marginTop: 8, marginBottom: 12 },
+    list: { paddingBottom: 24, gap: 10 },
+    row: {
+      backgroundColor: C.card,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: C.line,
+      padding: 14,
+    },
+    rowTitle: { fontSize: 17, fontWeight: '600', color: C.text },
+    rowSub: { fontSize: 14, color: C.muted, marginTop: 4 },
+    rowDate: { fontSize: 12, color: C.muted, marginTop: 8 },
+    empty: { color: C.muted, fontSize: 15, marginTop: 24, textAlign: 'center' },
+    hint: { color: C.muted, fontSize: 12, textAlign: 'center', paddingVertical: 8 },
+    addRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+    addInput: {
+      flex: 1,
+      backgroundColor: C.card,
+      borderWidth: 1,
+      borderColor: C.line,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      fontSize: 16,
+      color: C.text,
+    },
+    addBtn: {
+      backgroundColor: C.accent,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      justifyContent: 'center',
+    },
+    addBtnText: { color: C.accentText, fontWeight: '600', fontSize: 16 },
+    titleInput: { fontSize: 24, fontWeight: '700', color: C.text, paddingVertical: 8 },
+    bodyInput: { flex: 1, fontSize: 17, lineHeight: 24, color: C.text, paddingTop: 8 },
+  });
+}
