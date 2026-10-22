@@ -14,9 +14,10 @@ import {
 } from '@/components/schedule/date-utils';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { formatMinutes } from '@/components/timer/time-utils';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { deleteTask, getTasks, updateTask } from '@/storage';
+import { deleteTask, getTasks, setTaskDone } from '@/storage';
 
 const ACCENT = '#208AEF';
 const PRIORITY_COLORS = { low: '#34A853', medium: '#F9A825', high: '#E53935' };
@@ -57,7 +58,7 @@ export default function ScheduleScreen() {
   const range = useMemo(() => getRange(mode, anchor), [mode, anchor]);
 
   // Задачи периода, сгруппированные по датам: [{ date, items: [...] }, ...]
-  const { sections, total, done } = useMemo(() => {
+  const { sections, total, done, plannedMin, loggedMin } = useMemo(() => {
     const inRange = tasks.filter((t) => t.date && t.date >= range.from && t.date <= range.to);
     inRange.sort((a, b) => a.date.localeCompare(b.date) || compareTime(a.time, b.time));
 
@@ -74,6 +75,9 @@ export default function ScheduleScreen() {
       sections: groups,
       total: inRange.length,
       done: inRange.filter((t) => t.done).length,
+      // План и факт времени за период (факт копит трекер, см. setTaskDone в storage.js)
+      plannedMin: inRange.reduce((sum, t) => sum + (t.durationMin || 0), 0),
+      loggedMin: inRange.reduce((sum, t) => sum + (t.spentMin || 0), 0),
     };
   }, [tasks, range.from, range.to]);
 
@@ -81,7 +85,8 @@ export default function ScheduleScreen() {
   const showsToday = today >= range.from && today <= range.to;
 
   async function toggleDone(task) {
-    await updateTask(task.id, { done: !task.done });
+    // Через setTaskDone: при выполнении время задачи само попадает в трекер
+    await setTaskDone(task.id, !task.done);
     await reload();
   }
 
@@ -150,7 +155,10 @@ export default function ScheduleScreen() {
 
             <View style={styles.infoRow}>
               <ThemedText type="small" themeColor="textSecondary">
-                {total === 0 ? 'Задач нет' : 'Задач: ' + total + ' · выполнено: ' + done}
+                {total === 0
+                  ? 'Задач нет'
+                  : 'Задач: ' + total + ' · выполнено: ' + done +
+                    ' · записано ' + formatMinutes(loggedMin) + ' из ' + formatMinutes(plannedMin)}
               </ThemedText>
               {!showsToday && (
                 <Pressable onPress={() => setAnchor(today)} hitSlop={8}>
@@ -226,9 +234,17 @@ function TaskRow({ task, onToggle, onDelete }) {
         {task.time || '—'}
       </ThemedText>
 
-      <ThemedText style={[styles.taskTitle, task.done && styles.taskTitleDone]} numberOfLines={2}>
-        {task.title}
-      </ThemedText>
+      <View style={styles.taskBody}>
+        <ThemedText style={task.done && styles.taskTitleDone} numberOfLines={2}>
+          {task.title}
+        </ThemedText>
+        {task.durationMin > 0 && (
+          <ThemedText type="small" themeColor="textSecondary">
+            {formatMinutes(task.durationMin)}
+            {task.spentMin > 0 ? ' · записано ' + formatMinutes(task.spentMin) : ''}
+          </ThemedText>
+        )}
+      </View>
 
       <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
 
@@ -332,7 +348,7 @@ const styles = StyleSheet.create({
   time: {
     width: 44,
   },
-  taskTitle: {
+  taskBody: {
     flex: 1,
   },
   taskTitleDone: {

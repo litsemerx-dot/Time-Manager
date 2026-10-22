@@ -14,11 +14,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { addDays, formatDayFriendly, isValidTime, normalizeTimeInput, todayKey } from './date-utils';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { formatMinutes } from '@/components/timer/time-utils';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { addTask } from '@/storage';
 
 const ACCENT = '#208AEF';
+
+// Варианты длительности задачи. Это время попадёт в трекер, когда задачу отметят выполненной.
+const DURATIONS = [15, 30, 45, 60, 90, 120];
+const DEFAULT_DURATION = 60;
 
 // Окно «Добавить план на день».
 // Человек выбирает дату, пишет задачи и для каждой указывает время.
@@ -34,7 +39,7 @@ export function AddPlanModal({ initialDate, onClose, onSaved }) {
   const nextRowId = useRef(2);
 
   const [date, setDate] = useState(initialDate);
-  const [rows, setRows] = useState([{ id: 1, title: '', time: '' }]);
+  const [rows, setRows] = useState([{ id: 1, title: '', time: '', durationMin: DEFAULT_DURATION }]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -48,7 +53,7 @@ export function AddPlanModal({ initialDate, onClose, onSaved }) {
   function addRow() {
     const id = nextRowId.current;
     nextRowId.current = id + 1;
-    setRows((current) => [...current, { id, title: '', time: '' }]);
+    setRows((current) => [...current, { id, title: '', time: '', durationMin: DEFAULT_DURATION }]);
   }
 
   function removeRow(id) {
@@ -80,7 +85,12 @@ export function AddPlanModal({ initialDate, onClose, onSaved }) {
       // Сохраняем по одной, по очереди: addTask читает и перезаписывает весь список,
       // и если запустить несколько сразу, часть задач потеряется.
       for (const row of filled) {
-        await addTask({ title: row.title.trim(), date, time: row.time });
+        await addTask({
+          title: row.title.trim(),
+          date,
+          time: row.time,
+          durationMin: row.durationMin,
+        });
       }
       onSaved(date);
     } catch (e) {
@@ -144,28 +154,50 @@ export function AddPlanModal({ initialDate, onClose, onSaved }) {
                 Задачи
               </ThemedText>
               {rows.map((row) => (
-                <View key={row.id} style={styles.taskRow}>
-                  <TextInput
-                    style={[...inputStyle, styles.timeInput]}
-                    value={row.time}
-                    onChangeText={(text) => changeRow(row.id, { time: normalizeTimeInput(text) })}
-                    placeholder="09:30"
-                    placeholderTextColor={theme.textSecondary}
-                    keyboardType="number-pad"
-                    maxLength={5}
-                  />
-                  <TextInput
-                    style={[...inputStyle, styles.titleInput]}
-                    value={row.title}
-                    onChangeText={(text) => changeRow(row.id, { title: text })}
-                    placeholder="Что нужно сделать"
-                    placeholderTextColor={theme.textSecondary}
-                  />
-                  {rows.length > 1 && (
-                    <Pressable onPress={() => removeRow(row.id)} hitSlop={10} style={styles.removeButton}>
-                      <ThemedText themeColor="textSecondary">✕</ThemedText>
-                    </Pressable>
-                  )}
+                <View key={row.id} style={styles.rowBlock}>
+                  <View style={styles.taskRow}>
+                    <TextInput
+                      style={[...inputStyle, styles.timeInput]}
+                      value={row.time}
+                      onChangeText={(text) => changeRow(row.id, { time: normalizeTimeInput(text) })}
+                      placeholder="09:30"
+                      placeholderTextColor={theme.textSecondary}
+                      keyboardType="number-pad"
+                      maxLength={5}
+                    />
+                    <TextInput
+                      style={[...inputStyle, styles.titleInput]}
+                      value={row.title}
+                      onChangeText={(text) => changeRow(row.id, { title: text })}
+                      placeholder="Что нужно сделать"
+                      placeholderTextColor={theme.textSecondary}
+                    />
+                    {rows.length > 1 && (
+                      <Pressable onPress={() => removeRow(row.id)} hitSlop={10} style={styles.removeButton}>
+                        <ThemedText themeColor="textSecondary">✕</ThemedText>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  {/* Сколько времени займёт задача. Уйдёт в трекер, когда её отметят выполненной. */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.durationRow}>
+                    {DURATIONS.map((min) => {
+                      const selected = row.durationMin === min;
+                      return (
+                        <Pressable
+                          key={min}
+                          onPress={() => changeRow(row.id, { durationMin: min })}
+                          style={[
+                            styles.chip,
+                            { backgroundColor: selected ? ACCENT : theme.backgroundElement },
+                          ]}>
+                          <ThemedText type="small" style={selected && styles.chipTextSelected}>
+                            {formatMinutes(min)}
+                          </ThemedText>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
                 </View>
               ))}
 
@@ -244,10 +276,21 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: 16,
   },
+  rowBlock: {
+    gap: Spacing.two,
+    marginBottom: Spacing.two,
+  },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  chipTextSelected: {
+    color: '#ffffff',
   },
   input: {
     borderRadius: 12,
